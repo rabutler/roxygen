@@ -192,6 +192,24 @@ test_that("short and sweet links work", {
     #' @name markdown-test
     foo <- function() {}")[[1]]
   expect_equivalent_rd(out1, out2)
+
+  out1 <- roc_proc_text(roc, "
+    #' Title.
+    #'
+    #' In a different help file: [stringr::str_split_fixed()].
+    #' [named differently][stringr::str_split_fixed()].
+    #'
+    #' @md
+    foo <- function() {}")[[1]]
+  out2 <- roc_proc_text(roc, "
+    #' Title.
+    #'
+    #' In a different help file: \\code{\\link[stringr:str_split]{stringr::str_split_fixed()}}.
+    #' \\link[stringr:str_split]{named differently}.
+    #'
+    #' @md
+    foo <- function() {}")[[1]]
+  expect_equivalent_rd(out1, out2)
 })
 
 test_that("a weird markdown link bug is fixed", {

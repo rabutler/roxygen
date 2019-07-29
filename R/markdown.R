@@ -359,6 +359,9 @@ parse_link <- function(destination, contents) {
   s4 <- str_detect(destination, "-class$")
   noclass <- str_match(fun, "^(.*)-class$")[1,2]
 
+  ## ensure that the file link name is correct by searching all the help files
+  obj <- check_help_file_name(obj, pkg)
+
   ## To understand this, look at the RD column of the table above
   if (!has_link_text) {
     paste0(
@@ -391,6 +394,35 @@ parse_link <- function(destination, contents) {
       if (is_code) "}" else ""
     )
   }
+}
+
+## checks the help file name to make sure the file name and object name are the
+## same. If they aren't it will update to the correct filename.
+check_help_file_name <- function(obj, pkg) {
+
+  if (! is.na(pkg)) {
+    ## only need to search levels 1-2 b/c if pkg is specified, it is not in this
+    ## package
+    ## ToDo: verify that is an ok assumption
+    html_link <- tools::findHTMLlinks(level = 1:2)[obj]
+    ## not really sure what to do if the html file isn't found, so do nothing
+    ## this should ensure consistent results with current implementation
+    if (! is.na(html_link)) {
+      ## split on "/"; the last entry is the html file
+      parsed_links <- utils::tail(stringr::str_split(html_link, "/")[[1]], 3)
+      found_pkg <- parsed_links[1]
+      html <- parsed_links[3]
+
+      ## if the package in the found html links matches the user speciifed
+      ## package, then use the found html file; otherwise, don't change anything
+      ## as either the linked to package might not be installed, or it might
+      ## be linking to a file of the same name in a different package
+      if (found_pkg == pkg)
+        obj <- stringr::str_split(html, "\\.")[[1]][1]
+    }
+  }
+
+  obj
 }
 
 ## Check if a string contains a pattern exactly once. Overlapping
